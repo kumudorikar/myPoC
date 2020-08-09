@@ -144,9 +144,75 @@ var getStl = function(req, res) {
   });
 };
 
+var uploadFile = function(req, res) {
+  request.get({
+    uri: apiUrl + '/api/blobelements/d/' + req.query.documentId + "/w/" + req.query.workspaceId,
+    headers: {
+      'Authorization': 'Bearer ' + req.user.accessToken
+    }
+  }).then(function(data) {
+    res.send(data);
+  }).catch(function(data) {
+    if (data.statusCode === 401) {
+      authentication.refreshOAuthToken(req, res).then(function() {
+        uploadFile(req, res);
+      }).catch(function(err) {
+        console.log('Error refreshing token or uploading file: ', err);
+      });
+    } else {
+      console.log('GET /api/elements/upload error: ', data);
+    }
+  });
+};
+
+var downloadFile = function(req, res) {
+  request.get({
+    uri: apiUrl + '/api/blobelements/d/' + req.query.documentId + "/w/" + req.query.workspaceId + "/e/" + req.query.elementId,
+    headers: {
+      'Authorization': 'Bearer ' + req.user.accessToken
+    }
+  }).then(function(data) {
+    res.send(data);
+  }).catch(function(data) {
+    if (data.statusCode === 401) {
+      authentication.refreshOAuthToken(req, res).then(function() {
+        downloadFile(req, res);
+      }).catch(function(err) {
+        console.log('Error refreshing token or uploading file: ', err);
+      });
+    } else {
+      console.log('GET /api/elements/download error: ', data);
+    }
+  });
+};
+
+var search = function(req, res) {
+  request.get({
+    uri: apiUrl + '/api/documents/search',
+    headers: {
+      'Authorization': 'Bearer ' + req.user.accessToken
+    }
+  }).then(function(data) {
+    res.send(data);
+  }).catch(function(data) {
+    if (data.statusCode === 401) {
+      authentication.refreshOAuthToken(req, res).then(function() {
+        search(req, res);
+      }).catch(function(err) {
+        console.log('Error refreshing token or uploading file: ', err);
+      });
+    } else {
+      console.log('GET /api/documents/search error: ', data);
+    }
+  });
+};
+
 router.get('/documents', getDocuments);
 router.get('/elements', getElementList);
 router.get('/stl', getStl);
 router.get('/parts', getPartsList);
+router.get('/upload', uploadFile);
+router.get('/download', downloadFile);
+router.get('/search', search);
 
 module.exports = router;
